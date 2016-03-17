@@ -2,12 +2,11 @@ package com.rasikag.androidflashlight;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -17,10 +16,8 @@ public class FlashLightActivity extends AppCompatActivity {
     private boolean isFlashOn;
     private boolean isDeviceHasFlas;
 
-
-    private Camera mCamera;
-    private Camera.Parameters mParams;
     private MediaPlayer mMediaPlayer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +25,9 @@ public class FlashLightActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flash_light);
 
-        mSwich = (ImageButton) findViewById(R.id.btnSwitch);
 
+        mSwich = (ImageButton) findViewById(R.id.btnSwitch);
+        mSwich.setImageResource(R.drawable.btn_switch_off);
         isDeviceHasFlas = getApplicationContext().getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
@@ -47,74 +45,35 @@ public class FlashLightActivity extends AppCompatActivity {
             return;
         }
 
-        getCamera();
-
         isFlashOn = false;
-
-        toggleButtonImage();
 
         mSwich.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(), FlashLightBackGroundService.class);
                 if (isFlashOn) {
-                    turnOffFlash();
+                    i.setAction(FlashLightBackGroundService.ACTION_TURN_OFF);
+                    startService(i);
+                    toggleButtonImage();
+                    isFlashOn = false;
                 } else {
-                    turnOnFlash();
+                    toggleButtonImage();
+                    i.setAction(FlashLightBackGroundService.ACTION_TURN_ON);
+                    startService(i);
+                    isFlashOn = true;
                 }
             }
         });
 
     }
 
-    private void getCamera() {
-        if (mCamera == null) {
-            try {
-                mCamera = Camera.open();
-                mParams = mCamera.getParameters();
-            } catch (RuntimeException e) {
-                Log.e("Failed to Open. Error: ", e.getMessage());
-            }
-        }
-    }
-
-    private void turnOnFlash() {
-
-        if (!isFlashOn) {
-            if (mCamera == null || mParams == null) {
-                return;
-            }
-            mParams = mCamera.getParameters();
-            mParams.setFlashMode(mParams.FLASH_MODE_TORCH);
-            mCamera.setParameters(mParams);
-            mCamera.startPreview();
-            isFlashOn = true;
-
-            toggleButtonImage();
-        }
-
-    }
-
-    private void turnOffFlash() {
-        if (isFlashOn) {
-            if (mCamera == null || mParams == null) {
-                return;
-            }
-            mParams = mCamera.getParameters();
-            mParams.setFlashMode(mParams.FLASH_MODE_OFF);
-            mCamera.setParameters(mParams);
-            mCamera.stopPreview();
-            isFlashOn = false;
-
-            toggleButtonImage();
-        }
-    }
 
     private void toggleButtonImage() {
         if (isFlashOn) {
-            mSwich.setImageResource(R.drawable.btn_switch_on);
+            mSwich.setImageResource(R.drawable.btn_switch_off);
             playSound();
         } else {
-            mSwich.setImageResource(R.drawable.btn_switch_off);
+            mSwich.setImageResource(R.drawable.btn_switch_on);
             playSound();
         }
     }
@@ -138,33 +97,5 @@ public class FlashLightActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        turnOffFlash();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        if (isDeviceHasFlas) {
-//            turnOnFlash();
-//        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        getCamera();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
-    }
 
 }

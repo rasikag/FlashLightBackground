@@ -3,6 +3,7 @@
     package="com.rasikag.androidflashlight">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-feature android:name="android.hardware.camera" />
 
     <application
@@ -22,6 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".FlashLightBackGroundService" />
+
     </application>
 
 </manifest>
